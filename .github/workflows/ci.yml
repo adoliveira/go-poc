@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Cache do Go
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Instalar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Instalar dependências
+        run: |
+          cd src
+          go mod tidy
+
+      - name: Verificar formatação (gofmt)
+        run: |
+          cd src
+          gofmt -l .
+
+      - name: Lint (golint)
+        run: |
+          go install golang.org/x/lint/golint@latest
+          cd src
+          golint ./...
+
+      - name: Verificar vulnerabilidades (govulncheck)
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          cd src
+          govulncheck ./...
+
+      - name: Rodar testes
+        run: |
+          cd src
+          go test -v ./...
+
+      - name: Cobertura de testes
+        run: |
+          cd src
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+
+      - name: Build Docker image
+        run: |
+          docker build -t go-api .
