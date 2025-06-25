@@ -110,6 +110,12 @@ jobs:
           MIN_COVERAGE=80.0
           awk -v cov="$COVERAGE" -v min="$MIN_COVERAGE" 'BEGIN {if (cov+0 < min) {print "\n[ERRO] Cobertura de testes abaixo do mínimo exigido (" min "%). Corrija antes de prosseguir."; exit 1}}'
 
+      - name: Debug coverage files
+        run: |
+          cd src
+          echo "Conteúdo de coverage.out gerado na pipeline:"
+          cat coverage.out
+
       - name: Build Docker image
         run: |
           docker build -t go-api .
