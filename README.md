@@ -109,6 +109,17 @@ minikube service go-api-service
 ```
 Assim, você acessa facilmente a API pelo navegador. Se precisar de mais algum comando ou ajuste, só avisar!
 
+## Via Ingress
+Instale o Ingress Controller no Minikube:
+```sh
+minikube addons enable ingress
+```
+
+Aplique o manifest:
+```sh
+kubectl apply -f k8s/ingress.yaml
+```
+
 #minikube tunnel
 O comando abaixo cria um túnel de rede e expõe o Ingress Controller na porta 80 do seu host, resolvendo o problema de roteamento:
 ```sh
