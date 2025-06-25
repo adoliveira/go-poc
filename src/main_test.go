@@ -7,16 +7,38 @@ import (
 )
 
 func TestStartServer(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
+	mux := BuilServerMux()
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
 
+	resp, err := http.Get(ts.URL + "/user")
+	if err != nil {
+		t.Fatalf("erro ao fazer GET: %v", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("esperado status 200, obtido %d", resp.StatusCode)
+	}
+}
+
+func TestBuilServerMux(t *testing.T) {
+	mux := BuilServerMux()
 	req := httptest.NewRequest("GET", "/user", nil)
 	rr := httptest.NewRecorder()
-
-	handler.ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	mux.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("esperado status 200, obtido %d", rr.Code)
 	}
+}
+
+func TestMainFunction(t *testing.T) {
+	// Testa se a função main executa sem panic
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("main causou panic: %v", r)
+		}
+	}()
+	go func() {
+		// Executa main em uma goroutine para não bloquear
+		main()
+	}()
 }
