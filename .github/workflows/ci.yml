@@ -65,7 +65,7 @@ jobs:
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           cd src
-          govulncheck ./... -json > govuln.json
+          govulncheck -json ./... > govuln.json
           # Interrompe apenas se encontrar vulnerabilidades CRITICAL ou HIGH
           if grep -E '"severity":\s*"(CRITICAL|HIGH)"' govuln.json; then
             echo "\n[ERRO] Vulnerabilidades CRITICAL/HIGH encontradas pelo govulncheck. Corrija antes de prosseguir."
