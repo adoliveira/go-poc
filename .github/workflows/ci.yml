@@ -64,12 +64,3 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t go-api .
-
-      - name: Login no Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Tag da imagem
-        run: docker tag go-api:latest jmbsolution/go-api:latest
-
-      - name: Push da imagem para o Docker Hub
-        run: docker push jmbsolution/go-api:latest

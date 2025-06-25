@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: go-api
-          image: go-api:latest
+          image: jmbsolution/go-api:latest
           ports:
             - containerPort: 8080
           resources:
