@@ -107,8 +107,42 @@ Se precisar expor o serviço no Minikube, use:
 ```sh
 minikube service go-api-service
 ```
-
 Assim, você acessa facilmente a API pelo navegador. Se precisar de mais algum comando ou ajuste, só avisar!
+
+## Via Ingress
+Instale o Ingress Controller no Minikube:
+```sh
+minikube addons enable ingress
+```
+
+Aplique o manifest:
+```sh
+kubectl apply -f k8s/ingress.yaml
+```
+
+#minikube tunnel
+O comando abaixo cria um túnel de rede e expõe o Ingress Controller na porta 80 do seu host, resolvendo o problema de roteamento:
+```sh
+minikube tunnel
+```
+Deixe esse comando rodando em um terminal separado.
+
+Agora é possivel testar usando:
+```sh
+curl -H "Host: go-api.local" http://localhost/user
+```
+
+No Minikube (especialmente com o driver docker no macOS), o Ingress geralmente é exposto em http://localhost, e não diretamente no IP da VM. Por isso, o comando curl com -H "Host: go-api.local" para localhost funciona.
+
+Se quiser acessar pelo navegador, basta garantir que o /etc/hosts tenha:
+```sh
+127.0.0.1 go-api.local
+```
+ou
+```sh
+localhost go-api.local
+```
+Assim, você pode acessar http://go-api.local/user no navegador.
 
 ## Requisitos
 - Go 1.24+
