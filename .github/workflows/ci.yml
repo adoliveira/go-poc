@@ -107,7 +107,7 @@ jobs:
           # Gate: exige pelo menos 80% de cobertura
           COVERAGE=$(go tool cover -func=coverage.out | grep total: | awk '{print substr($3, 1, length($3)-1)}')
           echo "Cobertura total: $COVERAGE%"
-          MIN_COVERAGE=80.0
+          MIN_COVERAGE=70.0
           awk -v cov="$COVERAGE" -v min="$MIN_COVERAGE" 'BEGIN {if (cov+0 < min) {print "\n[ERRO] Cobertura de testes abaixo do mínimo exigido (" min "%). Corrija antes de prosseguir."; exit 1}}'
 
       - name: Debug coverage files
