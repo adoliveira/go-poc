@@ -120,7 +120,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'pull_request' && any(github.event.pull_request.labels.*.name, startsWith('docker-publish:'))
+    if: github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'docker-publish:')
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
