@@ -12,6 +12,7 @@ func StartServer(mux http.Handler) {
 	http.ListenAndServe(":8080", mux)
 }
 
+// BuilServerMux cria e retorna um *http.ServeMux com as rotas da API
 func BuilServerMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/user", handlers.UserHandler)
