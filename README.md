@@ -39,28 +39,25 @@ docker run -p 8080:8080 go-api
 
 Pronto! Sua API estará acessível em http://localhost:8080/user.
 
-#Para fazer o push da imagem para o Docker Hub (docker.io) via GitHub Actions, siga estes passos:
+## Publicação automática da imagem Docker via GitHub Actions
 
-Adicione os segredos DOCKERHUB_USERNAME e DOCKERHUB_TOKEN no repositório do GitHub (Settings > Secrets and variables > Actions > New repository secret).
+A publicação da imagem Docker no Docker Hub é feita automaticamente pela pipeline do GitHub Actions quando um Pull Request recebe uma label no formato:
 
-Adicione os steps abaixo ao final do seu workflow de CI, após o build da imagem:
-
-```yml
-- name: Login no Docker Hub
-run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-- name: Tag da imagem
-run: docker tag go-api:latest jmbsolution/go-api:latest
-
-- name: Push da imagem para o Docker Hub
-run: docker push jmbsolution/go-api:latest
+```
+docker-publish:vX.Y.Z
 ```
 
-Esses steps vão:
+Exemplo: `docker-publish:v1.2.3`
 
-Fazer login no Docker Hub usando os segredos.
-Taguear a imagem local como jmbsolution/go-api:latest.
-Fazer o push da imagem para o repositório do Docker Hub.
+**Como funciona:**
+- Adicione a label ao PR com o valor desejado (versão semver, com ou sem o prefixo `v`).
+- O workflow irá extrair a versão da label e publicar a imagem no Docker Hub com a tag correspondente.
+- A imagem também será publicada com a tag `latest`.
+
+**Pré-requisitos:**
+- Os segredos `DOCKERHUB_USERNAME` e `DOCKERHUB_TOKEN` devem estar configurados no repositório (Settings > Secrets and variables > Actions > New repository secret).
+
+> **Importante:** Não é mais necessário adicionar steps manuais de push no workflow. Todo o processo é automatizado via label no PR.
 
 ## Testes
 

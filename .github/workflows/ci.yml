@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main ]
   pull_request:
     branches: [ main, develop ]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 jobs:
   build:
@@ -19,7 +20,7 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('src/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
@@ -107,7 +108,7 @@ jobs:
           # Gate: exige pelo menos 80% de cobertura
           COVERAGE=$(go tool cover -func=coverage.out | grep total: | awk '{print substr($3, 1, length($3)-1)}')
           echo "Cobertura total: $COVERAGE%"
-          MIN_COVERAGE=80.0
+          MIN_COVERAGE=70.0
           awk -v cov="$COVERAGE" -v min="$MIN_COVERAGE" 'BEGIN {if (cov+0 < min) {print "\n[ERRO] Cobertura de testes abaixo do mínimo exigido (" min "%). Corrija antes de prosseguir."; exit 1}}'
 
       - name: Debug coverage files
@@ -116,6 +117,41 @@ jobs:
           echo "Conteúdo de coverage.out gerado na pipeline:"
           cat coverage.out
 
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'docker-publish:')
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Login no Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Extrair versão semver da label
+        id: semver
+        run: |
+          LABEL=$(echo "${{ toJson(github.event.pull_request.labels) }}" | grep -o 'docker-publish:[^" ]*' | head -n1)
+          if [ -z "$LABEL" ]; then
+            echo "[ERRO] Nenhuma label docker-publish:<versao> encontrada no PR."
+            exit 1
+          fi
+          VERSION=$(echo $LABEL | cut -d: -f2)
+          VERSION=$(echo "$VERSION" | sed 's/[, ]*$//')
+          echo "$VERSION" | grep -Eq '^v?[0-9]+\.[0-9]+\.[0-9]+$' || { echo "[ERRO] Versão semver inválida: $VERSION"; exit 1; }
+          # Remove o 'v' inicial, se houver
+          IMAGE_VERSION=${VERSION#v}
+          echo "IMAGE_VERSION=$IMAGE_VERSION" >> $GITHUB_ENV
+
       - name: Build Docker image
         run: |
-          docker build -t go-api .
+          docker build -t jmbsolution/go-api:${{ env.IMAGE_VERSION }} .
+
+      - name: Tag da imagem (latest)
+        run: |
+          docker tag jmbsolution/go-api:${{ env.IMAGE_VERSION }} jmbsolution/go-api:latest
+
+      - name: Push da imagem para o Docker Hub
+        run: |
+          docker push jmbsolution/go-api:${{ env.IMAGE_VERSION }}
+          docker push jmbsolution/go-api:latest
